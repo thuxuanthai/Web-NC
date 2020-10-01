@@ -8,7 +8,6 @@
 <body>
 <?php 
 include("../connect.php");
-
 if(isset($_GET['idTL'])){
 $sl="select * from theloai where idTL=".$_GET['idTL'];}
 //$kq=mysql_query($sl);
@@ -48,12 +47,14 @@ An Hien
 </tr>
 <tr>
   <td align="right">icon</td>
-  <td> <img src="image/<?php echo $d['icon'] ?>" width="40" height="40" /></td>
+  <td> <img src="../image/<?php echo $d['icon'] ?>" width="40" height="40" /></td>
   
 </tr>
 <tr>
   <td align="right">&nbsp;</td>
-  <td>  <input type="file" name="image" id="image"  /> </td>
+  <td>  <input type="file" name="image" id="image"  />
+	<input type="hidden" name="ten_anh" value="<?php echo $d['icon']; ?>" >
+   </td>
 </tr>
 <tr>
 <td align="right">
@@ -66,57 +67,65 @@ An Hien
 </tr>
 </table>
 </form>
+
 <?php
 include("../connect.php");
 
-
-// upload hinh anh
-	if(isset($_FILES["image"]["name"])) 	$icon=$_FILES["image"]["name"];
-  if(isset($_FILES['image']['tmp_name'])) { 
-  $anhminhhoa_tmp=$_FILES['image']['tmp_name'];
-  					if(isset($_GET['idTL'])){
-						$sl="select icon from theloai where idTL=".$_GET['idTL'];}
-				$results = mysqli_query($connect,$sl);
-				$d = mysqli_fetch_array($results);
-				if($d['icon']!=$icon)
-				{
-				    move_uploaded_file($anhminhhoa_tmp,"image/".$icon);
-				    unlink('admin/image/n.png');
-				}
-		}
-
-
-	
- //lay gia tri cho tham so
-    $tam="";
 if(isset($_POST["TenTL"]))	$theloai = $_POST['TenTL'];
 if(isset($_POST["ThuTu"]))	$thutu = $_POST['ThuTu'];
 if(isset($_POST["AnHien"]))	$an= $_POST['AnHien'];
-if (isset($_POST['Sua'])) 
+$ten_file_tai_len="";
+if(isset($_FILES["image"]["name"])) $ten_file_tai_len=$_FILES["image"]["name"];	
+	if($ten_file_tai_len!="")		
+						{					
+							$icon = $ten_file_tai_len;
+						}
+						else
+						{
+							if(isset($_POST['ten_anh'])) $icon = $_POST['ten_anh'];
+						}
+						
+if(isset($_GET["idTL"])) $key = $_GET["idTL"];
+	if (isset($_POST['Sua'])) 
 	{
-		if(isset($_GET["idTL"]))   
-			{
-			 $key = $_GET["idTL"];
-			}
-
-	if($icon=="")
-	{		
-$sl="update theloai set TenTL='$theloai',ThuTu='$thutu',AnHien='$an' where idTL='$key'";		
-	}
-	else
-	{
+		
+		$sl="select count(*) from theloai where icon='$icon' ";
+		$results=mysqli_query($connect,$sl);
+		$d=mysqli_fetch_array($results);
+		if($d[0]==0 or $ten_file_tai_len=="")
+		{
 $sl="update theloai set TenTL='$theloai',ThuTu='$thutu',AnHien='$an',icon='$icon' where idTL ='$key'";
-	}
-//$uup=mysql_query($sl);
+
+							if($ten_file_tai_len!="")
+									{	
+							
+						
+						    move_uploaded_file($_FILES['image']['tmp_name'],"../image/".$ten_file_tai_len);
+						     $duong_dan_anh_cu="../image/".filter_input(INPUT_POST,"ten_anh");
+							unlink($duong_dan_anh_cu);
+								}
+
+		if(mysqli_query($connect, $sl))
+					{
+						echo "<script language='javascript'>alert('sua thanh cong');";
+							echo "location.href='theloai.php';</script>";
+					}
+
+		}
+
+		else
+		{
+			echo "<script language='javascript'>alert('anh bi trung ten');";
+			echo "location.href='theloai_sua.php?idTL=$key';</script>";
+		}
+				
+					
+			
+	
+	 }
 
 
-if(mysqli_query($connect, $sl))
-{
-	echo "<script language='javascript'>alert('sua thanh cong');";
-		echo "location.href='theloai.php';</script>";
-}
-	}
+		
 ?>
-
 </body>
 </html>
